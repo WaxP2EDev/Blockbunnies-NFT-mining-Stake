@@ -1,6 +1,7 @@
 #include <eosio/eosio.hpp>
 #include <eosio/system.hpp>
 #include <eosio/asset.hpp>
+#include <tables/totalstake/totalstake.hpp>
 using namespace eosio;
 using std::string;
 using std::vector;
@@ -11,11 +12,24 @@ using std::vector;
 typedef uint128_t uuid;
 typedef uint64_t id_type;
 typedef string uri_type;
+#define BLOCKBUNNIES_SYMB ""
 
 CONTRACT blockbunnies : public eosio::contract {
   public:
     using contract::contract;
-    blockbunnies(eosio::name receiver, eosio::name code, eosio::datastream<const char *> ds) : contract(receiver, code, ds) {}
+    blockbunnies(eosio::name receiver, eosio::name code, eosio::datastream<const char *> ds) : 
+      contract(receiver, code, ds),
+      _staker_list(receiver, receiver.value),
+      _banned_list(receiver, receiver.value),
+      _admin_list(receiver, receiver.value),
+      blockbunnies_symb("TRPM",0){} //thre precision of the symbol is the decimal precision of
+
+    ACTION regstaker(name username);
+
+    ACTION banstaker (name username);
+
+    ACTION addadmin (name username);
+
     ACTION stake(name owner, name beneficiary, id_type	NFTid)
     {
       if (!has_auth(_self) && !has_auth(owner))
