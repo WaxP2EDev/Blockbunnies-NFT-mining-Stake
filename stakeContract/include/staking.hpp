@@ -30,15 +30,6 @@ CONTRACT blockbunnies : public eosio::contract {
 
     ACTION addadmin (name username);
 
-    ACTION stake(name owner, name beneficiary, id_type	NFTid)
-    {
-      if (!has_auth(_self) && !has_auth(owner))
-      {
-        check(false, "Insufficient authority.");
-      }
-      // stake_m(owner, beneficiary, quantity);
-      transferNFT(owner, CONTRACT_ADDRESS, NFTid, "Staking NFT");
-    }
     ACTION transfer( name 	from,
                       name 	to,
                       asset	quantity,
@@ -48,6 +39,8 @@ CONTRACT blockbunnies : public eosio::contract {
       eosio_assert( is_account( to ), "to account does not exist");
       eosio_assert( memo.size() <= 256, "memo has more than 256 bytes" );
       eosio_assert( quantity.amount == 1, "cannot transfer quantity, not equal to 1" );
+      auto itr = _staker_list.find(username.value);
+      eosio_assert(itr != _staker_list.end(), "You cannot stake, you are not yet registered");
       auto symbl = tokens.get_index<"bysymbol"_n>();
       auto it = symbl.lower_bound(quantity.symbol.code().raw());
       bool found = false;
@@ -59,6 +52,20 @@ CONTRACT blockbunnies : public eosio::contract {
           break;
         }
       }
+      if(msg == "start") {
+        _staker_list.modify(itr, username, [&](auto& row){
+          row.fund_staked = quantity;
+          nftid_staked.push_back(id);
+          row.isstaked = true;
+        });
+      }
+      else if(msg == "increment"){
+        _staker_list.modify(itr, username, [&](auto& row){
+          row.fund_staked += quantity;
+          nftid_staked.push_back(id);
+        });
+      }
+      else check(false, "Error with staking options, please check you status");
       eosio_assert(found, "token is not found or is not owned by account");
       require_recipient( from );
       require_recipient( to );

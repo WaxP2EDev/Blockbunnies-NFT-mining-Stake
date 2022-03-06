@@ -49,25 +49,17 @@ ACTION blockbunnies::addadmin(name username){
 void blockbunnies::stake(name username, name receiver, asset quantity, string msg){
   require_auth(username);
   if (receiver != get_self() || username == get_self()) return;
-  auto itr = _staker_list.find(username.value);
-
-  check(itr != _staker_list.end(), "You cannot stake, you are not yet registered");
-  check(quantity.symbol == tropium_symb, "wrong token used");
+  check(quantity.symbol == blockbunnies_symb, "wrong NFT used");
   //check( msg.size() <= 256, "msg has more than 256 bytes" );
   check(msg == "increment" || msg =="start", "Please use \"increment\" to increase your stake or \"start\" to deposit your first stake");
   
   if(msg == "start" && itr->isstaked == false){
-  //TODO: Change amount from 5000 to 5000.0000
-  check(quantity.amount >= 5000, "Staked amount not enough, stake at least 5000");
-    _staker_list.modify(itr, username, [&](auto& row){
-      row.fund_staked = quantity;
-      row.isstaked = true;
-    });
+    check(quantity.amount >= 1, "Staked amount of NFT not enough, stake at least 1");
+    transferNFT(username, CONTRACT_ADDRESS, quantity, msg);
   }
   else if (msg == "increment" && itr->isstaked == true){
-    _staker_list.modify(itr, username, [&](auto& row){
-      row.fund_staked += quantity;
-    });
+    transferNFT(username, CONTRACT_ADDRESS, quantity, msg);
+    
   }
   else check(false, "Error with staking options, please check you status");
 
@@ -89,17 +81,17 @@ ACTION blockbunnies::unstake (name username){
 void blockbunnies::sub_balance( name owner, asset value ) {
 
 	account_index from_acnts( _self, owner.value );
-        const auto& from = from_acnts.get( value.symbol.code().raw(), "no balance object found" );
-        eosio_assert( from.balance.amount >= value.amount, "overdrawn balance" );
+    const auto& from = from_acnts.get( value.symbol.code().raw(), "no balance object found" );
+    eosio_assert( from.balance.amount >= value.amount, "overdrawn balance" );
 
 
-        if( from.balance.amount == value.amount ) {
-            from_acnts.erase( from );
-        } else {
-            from_acnts.modify( from, owner, [&]( auto& a ) {-
-                a.balance -= value;
-            });
-        }
+    if( from.balance.amount == value.amount ) {
+        from_acnts.erase( from );
+    } else {
+        from_acnts.modify( from, owner, [&]( auto& a ) {-
+            a.balance -= value;
+        });
+    }
 }
 
 void blockbunnies::add_balance( name owner, asset value, name ram_payer ) {
