@@ -1,6 +1,11 @@
 #include <eosio/eosio.hpp>
 #include <eosio/system.hpp>
 #include <eosio/asset.hpp>
+#include <map>
+#include <string>
+#include <iterator>
+#include <vector>
+#include <math.h>
 #include <tables/totalstake/totalstake.hpp>
 using namespace eosio;
 using std::string;
@@ -52,20 +57,19 @@ CONTRACT blockbunnies : public eosio::contract {
           break;
         }
       }
-      if(msg == "start") {
+      if(memo == "start") {
         _staker_list.modify(itr, username, [&](auto& row){
           row.fund_staked = quantity;
           nftid_staked.push_back(id);
           row.isstaked = true;
         });
       }
-      else if(msg == "increment"){
+      else if(memo == "increment"){
         _staker_list.modify(itr, username, [&](auto& row){
           row.fund_staked += quantity;
           nftid_staked.push_back(id);
         });
       }
-      else check(false, "Error with staking options, please check you status");
       eosio_assert(found, "token is not found or is not owned by account");
       require_recipient( from );
       require_recipient( to );
@@ -108,7 +112,4 @@ CONTRACT blockbunnies : public eosio::contract {
     
     void sub_balance(name owner, asset value);
     void add_balance(name owner, asset value, name ram_payer);
-    void sub_supply(asset quantity);
-    void add_supply(asset quantity);
-
 };
