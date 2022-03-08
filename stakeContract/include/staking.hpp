@@ -6,7 +6,7 @@
 #include <iterator>
 #include <vector>
 #include <math.h>
-#include <tables/totalstake/totalstake.hpp>
+// #include <totalstake.hpp>
 using namespace eosio;
 using std::string;
 using std::vector;
@@ -27,6 +27,8 @@ CONTRACT blockbunnies : public eosio::contract {
       _staker_list(receiver, receiver.value),
       _banned_list(receiver, receiver.value),
       _admin_list(receiver, receiver.value),
+      tokens(receiver, receiver.value),
+
       blockbunnies_symb("TRPM",0){} //thre precision of the symbol is the decimal precision of
 
     ACTION regstaker(name username);
@@ -34,18 +36,19 @@ CONTRACT blockbunnies : public eosio::contract {
     ACTION banstaker (name username);
 
     ACTION addadmin (name username);
-
+    void stake(name username, name receiver, asset quantity, string msg);
+    ACTION unstake (name username);
     ACTION transfer( name 	from,
                       name 	to,
                       asset	quantity,
                       string	memo ) {
-      eosio_assert( from != to, "cannot transfer to self" );
+      check( from != to, "cannot transfer to self" );
       require_auth( from );
-      eosio_assert( is_account( to ), "to account does not exist");
-      eosio_assert( memo.size() <= 256, "memo has more than 256 bytes" );
-      eosio_assert( quantity.amount == 1, "cannot transfer quantity, not equal to 1" );
-      auto itr = _staker_list.find(username.value);
-      eosio_assert(itr != _staker_list.end(), "You cannot stake, you are not yet registered");
+      check( is_account( to ), "to account does not exist");
+      check( memo.size() <= 256, "memo has more than 256 bytes" );
+      check( quantity.amount == 1, "cannot transfer quantity, not equal to 1" );
+      auto itr = _staker_list.find(from.value);
+      check(itr != _staker_list.end(), "You cannot stake, you are not yet registered");
       auto symbl = tokens.get_index<"bysymbol"_n>();
       auto it = symbl.lower_bound(quantity.symbol.code().raw());
       bool found = false;
@@ -58,22 +61,23 @@ CONTRACT blockbunnies : public eosio::contract {
         }
       }
       if(memo == "start") {
-        _staker_list.modify(itr, username, [&](auto& row){
+        _staker_list.modify(itr, from, [&](auto& row){
           row.fund_staked = quantity;
-          nftid_staked.push_back(id);
+          row.nftid_staked.push_back(id);
           row.isstaked = true;
         });
       }
       else if(memo == "increment"){
-        _staker_list.modify(itr, username, [&](auto& row){
+        _staker_list.modify(itr, from, [&](auto& row){
           row.fund_staked += quantity;
-          nftid_staked.push_back(id);
+          row.nftid_staked.push_back(id);
         });
       }
-      eosio_assert(found, "token is not found or is not owned by account");
+      check(found, "token is not found or is not owned by account");
       require_recipient( from );
       require_recipient( to );
-      SEND_INLINE_ACTION( *this, transferNFT, {from, "active"_n}, {from, to, id, memo} );
+      // SEND_INLINE_ACTION( *this, transferNFT, {from, "active"_n}, {from, to, id, memo} );
+      transferNFT(from, to, id, memo);
     }
     
     void transferNFT( name	from, name 	to, id_type	id, string	memo ) {
@@ -109,7 +113,90 @@ CONTRACT blockbunnies : public eosio::contract {
         sub_balance( from, st.value );
         add_balance( to, st.value, from );
       }
+      private:
+        TABLE total_stake {
+          eosio::name account;
+          eosio::asset to_self;
+          eosio::asset to_others;
+          eosio::asset locked;
+          eosio::asset available;
+
+          uint64_t primary_key() const { return account.value; }
+        };
+
+        typedef eosio::multi_index<"totalstake"_n, total_stake> total_stake_index;
+
+        TABLE staker{
+            name username; //name of the staking user
+            asset fund_staked; // funds to be staked
+            vector<id_type> nftid_staked;
+            bool isstaked; //if the users has already staked funds or not
+            uint64_t primary_key() const {return username.value;}
+        };
+        typedef eosio::multi_index<name("stakerlist"), staker> stakers;
+        stakers _staker_list;
+
+        TABLE banned{
+            name username;
+            asset fund_held; //funds that were staked by the user
+            uint64_t primary_key() const {return username.value;}
+        };
+        typedef eosio::multi_index<name("bannedlist"), banned> banned_stakers;
+        banned_stakers _banned_list; 
+
+        TABLE admin{
+            name username;
+            uint64_t primary_key() const {return username.value;}
+        };
+        typedef eosio::multi_index<name("adminlist"), admin> admins;
+        admins _admin_list;
+
+        TABLE account {
+
+            asset balance;
+
+            uint64_t primary_key() const { return balance.symbol.code().raw(); }
+        };
+        using account_index = eosio::multi_index<"accounts"_n, account>;
+
+        TABLE token {
+            id_type id;          // Unique 64 bit identifier,
+            uri_type uri;        // RFC 3986
+            name owner;  	 // token owner
+            asset value;         // token value (1 SYS)
+            string tokenName;	 // token name
+
+            id_type primary_key() const { return id; }
+            uint64_t get_owner() const { return owner.value; }
+            string get_uri() const { return uri; }
+            asset get_value() const { return value; }
+            uint64_t get_symbol() const { return value.symbol.code().raw(); }
+            string get_name() const { return tokenName; }
+
+            // generated token global uuid based on token id and
+            // contract name, passed in the argument
+            uuid get_global_id(name self) const
+            {
+              uint128_t self_128 = static_cast<uint128_t>(self.value);
+              uint128_t id_128 = static_cast<uint128_t>(id);
+              uint128_t res = (self_128 << 64) | (id_128);
+              return res;
+            }
+
+            string get_unique_name() const
+            {
+              string unique_name = tokenName + "#" + std::to_string(id);
+              return unique_name;
+            }
+        };
+
+	      using token_index = eosio::multi_index<"token"_n, token,
+	                    indexed_by< "byowner"_n, const_mem_fun< token, uint64_t, &token::get_owner> >,
+			    indexed_by< "bysymbol"_n, const_mem_fun< token, uint64_t, &token::get_symbol> > >;
+        token_index tokens;
+        const symbol blockbunnies_symb;
     
     void sub_balance(name owner, asset value);
     void add_balance(name owner, asset value, name ram_payer);
+    void in_contract_transfer(name recipient, asset amount, string msg);
 };

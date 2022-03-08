@@ -9,7 +9,7 @@ ACTION blockbunnies::regstaker (name username){
   auto itr = _staker_list.find(username.value);
   check(itr == _staker_list.end(), "You are already registered, you can stake your TRPM");
 
-  asset temp_asset(0, tropium_symb);
+  asset temp_asset(0, blockbunnies_symb);
   itr = _staker_list.emplace(username, [&](auto& row){
     row.username = username;
     row.fund_staked = temp_asset;
@@ -53,12 +53,13 @@ void blockbunnies::stake(name username, name receiver, asset quantity, string ms
   //check( msg.size() <= 256, "msg has more than 256 bytes" );
   check(msg == "increment" || msg =="start", "Please use \"increment\" to increase your stake or \"start\" to deposit your first stake");
   
-  if(msg == "start" && itr->isstaked == false){
+  if(msg == "start"){
     check(quantity.amount >= 1, "Staked amount of NFT not enough, stake at least 1");
-    transferNFT(username, CONTRACT_ADDRESS, quantity, msg);
+    transfer(username, receiver, quantity, msg);
   }
-  else if (msg == "increment" && itr->isstaked == true){
-    transferNFT(username, CONTRACT_ADDRESS, quantity, msg);
+  //  && itr->isstaked == true
+  else if (msg == "increment"){
+    transfer(username, receiver, quantity, msg);
     
   }
   else check(false, "Error with staking options, please check you status");
@@ -82,7 +83,7 @@ void blockbunnies::sub_balance( name owner, asset value ) {
 
 	account_index from_acnts( _self, owner.value );
     const auto& from = from_acnts.get( value.symbol.code().raw(), "no balance object found" );
-    eosio_assert( from.balance.amount >= value.amount, "overdrawn balance" );
+    check( from.balance.amount >= value.amount, "overdrawn balance" );
 
 
     if( from.balance.amount == value.amount ) {
@@ -107,5 +108,15 @@ void blockbunnies::add_balance( name owner, asset value, name ram_payer ) {
                 a.balance += value;
             });
         }
+}
+void blockbunnies::in_contract_transfer(name recipient, asset amount, string msg){
+
+  //TODO: Chance contract name from test1 to eosio.token during deployment
+  action{
+        permission_level{get_self(), "active"_n},
+        "test1"_n,
+        "transfer"_n,
+        std::make_tuple(get_self(), recipient, amount, msg)
+      }.send();
 }
 EOSIO_DISPATCH(blockbunnies, (stake))
