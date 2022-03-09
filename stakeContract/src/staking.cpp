@@ -17,7 +17,7 @@ ACTION blockbunnies::regstaker (name username){
   });
 
 }
-ACTION getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, string memo) {
+ACTION getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo) {
   requires(_self(), 0);
   check(NFTsID.getlength() > 0, "Not allowed getPower");
   check(memo, "Not allowed getPower");
@@ -78,61 +78,70 @@ ACTION getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, string
         }
       }    
     }
+    float plusPower = 0;
     for(unit32_t i in ToolNFTsID) {
       if(memo == "mining") {
         if(ToolNFTsID < 100) {
-          result += MiningcrewNFTs[0]; 
+          plusPower += MiningtoolNFTs[0]; 
         }
         else if(ToolNFTsID < 200) {
-          result += MiningcrewNFTs[1];          
+          plusPower += MiningtoolNFTs[1];          
         }
         else if(ToolNFTsID < 250) {
-          result += MiningcrewNFTs[2];
+          plusPower += MiningtoolNFTs[2];
         }
         else if(ToolNFTsID < 280) {
-          result += MiningcrewNFTs[3];
+          plusPower += MiningtoolNFTs[3];
         }
         else if(ToolNFTsID < 300) {
-          result += MiningcrewNFTs[4];
+          plusPower += MiningtoolNFTs[4];
         }
         else if(ToolNFTsID < 320) {
-          result += MiningcrewNFTs[5];
+          plusPower += MiningtoolNFTs[5];
         }
         else if(ToolNFTsID < 330) {
-          result += MiningcrewNFTs[6];
+          plusPower += MiningtoolNFTs[6];
         }
         else if(ToolNFTsID < 340) {
-          result += MiningcrewNFTs[7];
+          plusPower += MiningtoolNFTs[7];
         }
         else {
-          result += MiningcrewNFTs[8];
+          plusPower += MiningtoolNFTs[8];
         }
 
       }
       else if(memo == "farming") {
         if(ToolNFTsID < 100) {
-          result += FarmingcharacterNFTs[0]; 
+          plusPower += FarmingcharacterNFTs[0]; 
         }
         else if(ToolNFTsID < 200) {
-          result += FarmingcharacterNFTs[1];          
+          plusPower += FarmingcharacterNFTs[1];          
         }
         else if(ToolNFTsID < 250) {
-          result += FarmingcharacterNFTs[2];
+          plusPower += FarmingcharacterNFTs[2];
         }
         else if(ToolNFTsID < 280) {
-          result += FarmingcharacterNFTs[3];
+          plusPower += FarmingcharacterNFTs[3];
         }
         else if(ToolNFTsID < 300) {
-          result += FarmingcharacterNFTs[4];
+          plusPower += FarmingcharacterNFTs[4];
         }
         else if(ToolNFTsID < 320) {
-          result += FarmingcharacterNFTs[5];
+          plusPower += FarmingcharacterNFTs[5];
         }
         else if(ToolNFTsID < 330) {
-          result += FarmingcharacterNFTs[6];
+          plusPower += FarmingcharacterNFTs[6];
         }
       }    
     }
+    if(Vip) {
+      result = result + result*((plusPower+10)/100);
+    }
+    else
+    {
+      result = result + result*((plusPower)/100);
+    }
+    return result;
       
 }
 
