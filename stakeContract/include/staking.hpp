@@ -29,8 +29,11 @@ CONTRACT blockbunnies : public eosio::contract {
       _admin_list(receiver, receiver.value),
       tokens(receiver, receiver.value),
 
-      blockbunnies_symb("TRPM",0){} //thre precision of the symbol is the decimal precision of
-
+    blockbunnies_symb("TRPM",0){} //thre precision of the symbol is the decimal precision of
+    vector<float> MiningcrewNFTs = {0.2,7.19,0.66, 258.29, 78.27, 2.18, 78.27, 7.19, 258.29};
+    vector<uint8_t> MiningtoolNFTs = {1, 1, 1, 2, 4, 2, 4, 2, 4};
+    vector<float> FarmingcharacterNFTs = {23.27, 0.66, 0.2, 7.19, 258.29, 78.27, 7.19};
+    vector<uint8_t> FarmingtoolNFTs = {1, 1, 2, 4, 2, 1, 2};
     ACTION regstaker(name username);
 
     ACTION banstaker (name username);

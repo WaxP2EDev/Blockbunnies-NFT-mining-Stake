@@ -17,6 +17,124 @@ ACTION blockbunnies::regstaker (name username){
   });
 
 }
+ACTION getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, string memo) {
+  requires(_self(), 0);
+  check(NFTsID.getlength() > 0, "Not allowed getPower");
+  check(memo, "Not allowed getPower");
+  // NFTsID.map((r, idx) => {
+    float result = 0;
+    for(unit32_t i in CommonNFTsID) {
+      if(memo == "mining") {
+        if(CommonNFTsID < 100) {
+          result += MiningcrewNFTs[0]; 
+        }
+        else if(CommonNFTsID < 200) {
+          result += MiningcrewNFTs[1];          
+        }
+        else if(CommonNFTsID < 250) {
+          result += MiningcrewNFTs[2];
+        }
+        else if(CommonNFTsID < 280) {
+          result += MiningcrewNFTs[3];
+        }
+        else if(CommonNFTsID < 300) {
+          result += MiningcrewNFTs[4];
+        }
+        else if(CommonNFTsID < 320) {
+          result += MiningcrewNFTs[5];
+        }
+        else if(CommonNFTsID < 330) {
+          result += MiningcrewNFTs[6];
+        }
+        else if(CommonNFTsID < 340) {
+          result += MiningcrewNFTs[7];
+        }
+        else {
+          result += MiningcrewNFTs[8];
+        }
+
+      }
+      else if(memo == "farming") {
+        if(CommonNFTsID < 100) {
+          result += FarmingcharacterNFTs[0]; 
+        }
+        else if(CommonNFTsID < 200) {
+          result += FarmingcharacterNFTs[1];          
+        }
+        else if(CommonNFTsID < 250) {
+          result += FarmingcharacterNFTs[2];
+        }
+        else if(CommonNFTsID < 280) {
+          result += FarmingcharacterNFTs[3];
+        }
+        else if(CommonNFTsID < 300) {
+          result += FarmingcharacterNFTs[4];
+        }
+        else if(CommonNFTsID < 320) {
+          result += FarmingcharacterNFTs[5];
+        }
+        else if(CommonNFTsID < 330) {
+          result += FarmingcharacterNFTs[6];
+        }
+      }    
+    }
+    for(unit32_t i in ToolNFTsID) {
+      if(memo == "mining") {
+        if(ToolNFTsID < 100) {
+          result += MiningcrewNFTs[0]; 
+        }
+        else if(ToolNFTsID < 200) {
+          result += MiningcrewNFTs[1];          
+        }
+        else if(ToolNFTsID < 250) {
+          result += MiningcrewNFTs[2];
+        }
+        else if(ToolNFTsID < 280) {
+          result += MiningcrewNFTs[3];
+        }
+        else if(ToolNFTsID < 300) {
+          result += MiningcrewNFTs[4];
+        }
+        else if(ToolNFTsID < 320) {
+          result += MiningcrewNFTs[5];
+        }
+        else if(ToolNFTsID < 330) {
+          result += MiningcrewNFTs[6];
+        }
+        else if(ToolNFTsID < 340) {
+          result += MiningcrewNFTs[7];
+        }
+        else {
+          result += MiningcrewNFTs[8];
+        }
+
+      }
+      else if(memo == "farming") {
+        if(ToolNFTsID < 100) {
+          result += FarmingcharacterNFTs[0]; 
+        }
+        else if(ToolNFTsID < 200) {
+          result += FarmingcharacterNFTs[1];          
+        }
+        else if(ToolNFTsID < 250) {
+          result += FarmingcharacterNFTs[2];
+        }
+        else if(ToolNFTsID < 280) {
+          result += FarmingcharacterNFTs[3];
+        }
+        else if(ToolNFTsID < 300) {
+          result += FarmingcharacterNFTs[4];
+        }
+        else if(ToolNFTsID < 320) {
+          result += FarmingcharacterNFTs[5];
+        }
+        else if(ToolNFTsID < 330) {
+          result += FarmingcharacterNFTs[6];
+        }
+      }    
+    }
+      
+}
 
 ACTION blockbunnies::banstaker(name username){
   require_auth(get_self());
