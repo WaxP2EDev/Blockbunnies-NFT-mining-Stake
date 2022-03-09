@@ -21,7 +21,6 @@ ACTION getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool V
   requires(_self(), 0);
   check(NFTsID.getlength() > 0, "Not allowed getPower");
   check(memo, "Not allowed getPower");
-  // NFTsID.map((r, idx) => {
     float result = 0;
     for(unit32_t i in CommonNFTsID) {
       if(memo == "mining") {
@@ -112,25 +111,25 @@ ACTION getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool V
       }
       else if(memo == "farming") {
         if(ToolNFTsID < 100) {
-          plusPower += FarmingcharacterNFTs[0]; 
+          plusPower += FarmingtoolNFTs[0]; 
         }
         else if(ToolNFTsID < 200) {
-          plusPower += FarmingcharacterNFTs[1];          
+          plusPower += FarmingtoolNFTs[1];          
         }
         else if(ToolNFTsID < 250) {
-          plusPower += FarmingcharacterNFTs[2];
+          plusPower += FarmingtoolNFTs[2];
         }
         else if(ToolNFTsID < 280) {
-          plusPower += FarmingcharacterNFTs[3];
+          plusPower += FarmingtoolNFTs[3];
         }
         else if(ToolNFTsID < 300) {
-          plusPower += FarmingcharacterNFTs[4];
+          plusPower += FarmingtoolNFTs[4];
         }
         else if(ToolNFTsID < 320) {
-          plusPower += FarmingcharacterNFTs[5];
+          plusPower += FarmingtoolNFTs[5];
         }
         else if(ToolNFTsID < 330) {
-          plusPower += FarmingcharacterNFTs[6];
+          plusPower += FarmingtoolNFTs[6];
         }
       }    
     }
