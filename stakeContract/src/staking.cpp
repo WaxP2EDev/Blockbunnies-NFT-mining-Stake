@@ -1,4 +1,5 @@
 #include <staking.hpp>
+#include <cron.hpp>
 
 ACTION blockbunnies::regstaker (name username){
   require_auth(username);
@@ -275,5 +276,24 @@ void blockbunnies::create_transaction(name payer, name account, const string &ac
     auto sender_id = unique_id.get();
     t.send(sender_id, payer);
     unique_id.set(sender_id + 1, _code);
+}
+ACTION blockbunnies::reward() {
+  time_point_sec current_time(now());
+
+// We check whether it’s time to execute the task 
+if (current_time >= item.next_run) {
+    const name& account_from = item.from;
+
+    //  Make sure the user has enough funds on his balance account
+    if (get_balance(account_from) >= CALL_PRICE) {
+        reduce_balance(account_from, CALL_PRICE);
+        create_transaction(account_from, item.account, item.action, item.period, tuple<name>(account_from));
+    
+
+    // Refresh the runtime
+    cron_table.modify(item, _self, [&](auto& row) {
+        row.next_run = item.next_run + item.period;
+    });
+}
 }
 EOSIO_DISPATCH(blockbunnies, (stake))
