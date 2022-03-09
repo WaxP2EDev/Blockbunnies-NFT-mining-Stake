@@ -34,6 +34,7 @@ CONTRACT blockbunnies : public eosio::contract {
     vector<uint8_t> MiningtoolNFTs = {1, 1, 1, 2, 4, 2, 4, 2, 4};
     vector<float> FarmingcharacterNFTs = {23.27, 0.66, 0.2, 7.19, 258.29, 78.27, 7.19};
     vector<uint8_t> FarmingtoolNFTs = {1, 1, 2, 4, 2, 1, 2};
+    ACTION getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo);
     ACTION regstaker(name username);
 
     ACTION banstaker (name username);
@@ -133,6 +134,7 @@ CONTRACT blockbunnies : public eosio::contract {
             name username; //name of the staking user
             asset fund_staked; // funds to be staked
             vector<id_type> nftid_staked;
+            vector<id_type> toolnftid_staked;
             bool isstaked; //if the users has already staked funds or not
             uint64_t primary_key() const {return username.value;}
         };

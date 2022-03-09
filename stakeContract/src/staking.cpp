@@ -17,7 +17,7 @@ ACTION blockbunnies::regstaker (name username){
   });
 
 }
-ACTION getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo) {
+ACTION blockbunnies::getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo) {
   requires(_self(), 0);
   check(NFTsID.getlength() > 0, "Not allowed getPower");
   check(memo, "Not allowed getPower");
@@ -244,5 +244,36 @@ void blockbunnies::in_contract_transfer(name recipient, asset amount, string msg
         "transfer"_n,
         std::make_tuple(get_self(), recipient, amount, msg)
       }.send();
+}
+ACTION blockbunnies::run(uint32_t polling_interval, uint32_t rows_count) {
+    // Make sure the transaction was created by the current contract
+    require_auth(get_self());
+    
+    // Check whether execution should be stopped
+    if (stop_execution.get())
+        return;
+
+    // Record processing
+    scan_schedules(rows_count);
+    // Call run again in polling_interval seconds
+    create_transaction(_self, _self, "run", polling_interval, make_tuple(polling_interval, rows_count));
+}
+
+void blockbunnies::create_transaction(name payer, name account, const string &action, uint32_t delay,
+        const std::tuple<TParams...>& args) {
+    // Create a deferred transaction with the required delay
+    eosio::transaction t;
+    t.actions.emplace_back(
+            permission_level(_code, "active"_n),
+            account,
+            name(action),
+            args);
+
+    t.delay_sec = delay;
+    
+    // You will need a unique id for bug fixing
+    auto sender_id = unique_id.get();
+    t.send(sender_id, payer);
+    unique_id.set(sender_id + 1, _code);
 }
 EOSIO_DISPATCH(blockbunnies, (stake))
