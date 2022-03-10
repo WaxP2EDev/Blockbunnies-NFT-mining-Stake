@@ -1,26 +1,26 @@
 #include <staking.hpp>
-#include <cron.hpp>
+// #include <cron.hpp>
 
-ACTION blockbunnies::regstaker (name username, vector<id_type> nftid_staked, vector<id_type> toolnftid_staked, string place){
+ACTION blockbunnies::regstaker (name username, vector<asset> nftid_staked, vector<asset> toolnftid_staked, string place){
   require_auth(username);
-  
   auto itr_banned = _banned_list.find(username.value);
   check(itr_banned == _banned_list.end(), "You where banned, please see your administrator");
 
   auto itr = _staker_list.find(username.value);
   claim(username, place);
   check(itr == _staker_list.end(), "You are already registered, you can stake your NFTs");
-  time_point_sec current_time(now());
-  // asset temp_asset(0, blockbunnies_symb);
-  stake(username, CONTRACT_ADDRESS, nftid_staked.length(), "startcommon");
-  stake(username, CONTRACT_ADDRESS, toolnftid_staked.length(), "starttool");
+  time_point_sec         current_time         = eosio::current_time_point();
   itr = _staker_list.emplace(username, [&](auto& row){
     row.username = username;
-    for(id_type i in nftid_staked) {
-      row.nftid_staked.push_back(i);  
+    for(uint8_t i = 0 ; i < nftid_staked.size() ; i++) {
+      row.nftid_staked.push_back(nftid_staked[i]);
+      stake(username, contractowner, nftid_staked[i], "startcommon");
+  
     }
-    for(id_type i in toolnftid_staked) {
-      row.toolnftid_staked.push_back(i);  
+    for(uint8_t i = 0 ; i < toolnftid_staked.size() ; i++) {
+      row.nftid_staked.push_back(toolnftid_staked[i]);
+            stake(username, contractowner, toolnftid_staked[i], "startcommon");
+  
     }
     row.last_updated = current_time;
     row.next_run = row.last_updated + period;
@@ -30,34 +30,33 @@ ACTION blockbunnies::regstaker (name username, vector<id_type> nftid_staked, vec
   });
 }
 float blockbunnies::getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo) {
-  requires(_self(), 0);
-  check(NFTsID.getlength() > 0, "Not allowed getPower");
-  check(memo, "Not allowed getPower");
+
     float result = 0;
-    for(unit32_t i in CommonNFTsID) {
+    for(uint8_t i = 0 ; i < CommonNFTsID.size() ; i++) {
+
       if(memo == "mining") {
-        if(CommonNFTsID < 100) {
+        if(CommonNFTsID[i] < 100) {
           result += MiningcrewNFTs[0]; 
         }
-        else if(CommonNFTsID < 200) {
+        else if(CommonNFTsID[i] < 200) {
           result += MiningcrewNFTs[1];          
         }
-        else if(CommonNFTsID < 250) {
+        else if(CommonNFTsID[i] < 250) {
           result += MiningcrewNFTs[2];
         }
-        else if(CommonNFTsID < 280) {
+        else if(CommonNFTsID[i] < 280) {
           result += MiningcrewNFTs[3];
         }
-        else if(CommonNFTsID < 300) {
+        else if(CommonNFTsID[i] < 300) {
           result += MiningcrewNFTs[4];
         }
-        else if(CommonNFTsID < 320) {
+        else if(CommonNFTsID[i] < 320) {
           result += MiningcrewNFTs[5];
         }
-        else if(CommonNFTsID < 330) {
+        else if(CommonNFTsID[i] < 330) {
           result += MiningcrewNFTs[6];
         }
-        else if(CommonNFTsID < 340) {
+        else if(CommonNFTsID[i] < 340) {
           result += MiningcrewNFTs[7];
         }
         else {
@@ -66,54 +65,54 @@ float blockbunnies::getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolN
 
       }
       else if(memo == "farming") {
-        if(CommonNFTsID < 100) {
+        if(CommonNFTsID[i] < 100) {
           result += FarmingcharacterNFTs[0]; 
         }
-        else if(CommonNFTsID < 200) {
+        else if(CommonNFTsID[i] < 200) {
           result += FarmingcharacterNFTs[1];          
         }
-        else if(CommonNFTsID < 250) {
+        else if(CommonNFTsID[i] < 250) {
           result += FarmingcharacterNFTs[2];
         }
-        else if(CommonNFTsID < 280) {
+        else if(CommonNFTsID[i] < 280) {
           result += FarmingcharacterNFTs[3];
         }
-        else if(CommonNFTsID < 300) {
+        else if(CommonNFTsID[i] < 300) {
           result += FarmingcharacterNFTs[4];
         }
-        else if(CommonNFTsID < 320) {
+        else if(CommonNFTsID[i] < 320) {
           result += FarmingcharacterNFTs[5];
         }
-        else if(CommonNFTsID < 330) {
+        else if(CommonNFTsID[i] < 330) {
           result += FarmingcharacterNFTs[6];
         }
       }    
     }
     float plusPower = 0;
-    for(unit32_t i in ToolNFTsID) {
+    for(uint8_t i = 0 ; i < ToolNFTsID.size() ; i++) {
       if(memo == "mining") {
-        if(ToolNFTsID < 100) {
+        if(ToolNFTsID[i] < 100) {
           plusPower += MiningtoolNFTs[0]; 
         }
-        else if(ToolNFTsID < 200) {
+        else if(ToolNFTsID[i] < 200) {
           plusPower += MiningtoolNFTs[1];          
         }
-        else if(ToolNFTsID < 250) {
+        else if(ToolNFTsID[i] < 250) {
           plusPower += MiningtoolNFTs[2];
         }
-        else if(ToolNFTsID < 280) {
+        else if(ToolNFTsID[i] < 280) {
           plusPower += MiningtoolNFTs[3];
         }
-        else if(ToolNFTsID < 300) {
+        else if(ToolNFTsID[i] < 300) {
           plusPower += MiningtoolNFTs[4];
         }
-        else if(ToolNFTsID < 320) {
+        else if(ToolNFTsID[i] < 320) {
           plusPower += MiningtoolNFTs[5];
         }
-        else if(ToolNFTsID < 330) {
+        else if(ToolNFTsID[i] < 330) {
           plusPower += MiningtoolNFTs[6];
         }
-        else if(ToolNFTsID < 340) {
+        else if(ToolNFTsID[i] < 340) {
           plusPower += MiningtoolNFTs[7];
         }
         else {
@@ -122,25 +121,25 @@ float blockbunnies::getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolN
 
       }
       else if(memo == "farming") {
-        if(ToolNFTsID < 100) {
+        if(ToolNFTsID[i] < 100) {
           plusPower += FarmingtoolNFTs[0]; 
         }
-        else if(ToolNFTsID < 200) {
+        else if(ToolNFTsID[i] < 200) {
           plusPower += FarmingtoolNFTs[1];          
         }
-        else if(ToolNFTsID < 250) {
+        else if(ToolNFTsID[i] < 250) {
           plusPower += FarmingtoolNFTs[2];
         }
-        else if(ToolNFTsID < 280) {
+        else if(ToolNFTsID[i] < 280) {
           plusPower += FarmingtoolNFTs[3];
         }
-        else if(ToolNFTsID < 300) {
+        else if(ToolNFTsID[i] < 300) {
           plusPower += FarmingtoolNFTs[4];
         }
-        else if(ToolNFTsID < 320) {
+        else if(ToolNFTsID[i] < 320) {
           plusPower += FarmingtoolNFTs[5];
         }
-        else if(ToolNFTsID < 330) {
+        else if(ToolNFTsID[i] < 330) {
           plusPower += FarmingtoolNFTs[6];
         }
       }    
@@ -192,7 +191,7 @@ void blockbunnies::stake(name username, name receiver, asset quantity, string ms
   check(msg == "increment" || msg =="start", "Please use \"increment\" to increase your stake or \"start\" to deposit your first stake");
   
   if(msg == "start"){
-    check(quantity.amount >= 1, "Staked amount of NFT not enough, stake at least 1");
+    check(quantity.amount == 1, "Staked amount of NFT not enough, stake at least 1");
     transfer(username, receiver, quantity, msg);
   }
   //  && itr->isstaked == true
@@ -217,7 +216,7 @@ ACTION blockbunnies::unstake (name username){
   _staker_list.erase(itr);
   require_recipient(username);
 }
-ACTION transfer( name 	from,
+ACTION blockbunnies::transfer( name 	from,
                       name 	to,
                       asset	quantity,
                       string	memo ) {
@@ -242,14 +241,14 @@ ACTION transfer( name 	from,
   if(memo == "startcommon") {
     _staker_list.modify(itr, from, [&](auto& row){
       row.fund_staked = quantity;
-      row.nftid_staked.push_back(id);
+      row.nftid_staked.push_back(quantity);
       row.isstaked = true;
     });
   }
   else if(memo == "starttool") {
     _staker_list.modify(itr, from, [&](auto& row){
       row.fund_staked = quantity;
-      row.toolnftid_staked.push_back(id);
+      row.toolnftid_staked.push_back(quantity);
       row.isstaked = true;
     });
   }
@@ -305,7 +304,7 @@ void blockbunnies::in_contract_transfer(name recipient, asset amount, string msg
         std::make_tuple(get_self(), recipient, amount, msg)
       }.send();
 }
-void transferNFT( name	from, name 	to, id_type	id, string	memo ) {
+void blockbunnies::transferNFT( name	from, name 	to, id_type	id, string	memo ) {
         // Ensure authorized to send from account
   check( from != to, "cannot transfer to self" );
   require_auth( from );
@@ -342,11 +341,12 @@ asset blockbunnies::getReward(name username, string memo) {
   require_auth(get_self());
   asset reward;
   if(memo == "mining") {
-    reward  = "100.0000 BUNNY"; 
+    reward.amount  = 100;
+    reward.symbol =  blockbunnies_symb;
   }
   else if(memo == "farming") {
-    reward  = "100.0000 CARROT";
-  }
+    reward.amount  = 100;
+    reward.symbol =  blockcarrots_symb;  }
   auto itr = _staker_list.find(username.value);
   _staker_list.modify( itr, _self, [&]( auto& a ) {
       a.collect_amount.amount += reward.amount;
@@ -356,26 +356,26 @@ asset blockbunnies::getReward(name username, string memo) {
 }
 ACTION blockbunnies::claim(name username, string memo) {
   require_auth(get_self());
-  time_point_sec current_time(now());
+  static const time_point_sec         current_time         = eosio::current_time_point();
   for(auto& item : _staker_list) {
     if (item.next_run < current_time) {
-        item.last_updated = item.next_run;
-        item.next_run = last_updated + period;
-        getReward(item.username, memo);
-    //     if(memo == "mining") {
-    //     }
-    //     else if(memo == "farming") {
-    //       transfer( CONTRACT_ADDRESS, item.username, "100.0000 CARROT", "Prizepayout bonus");   
-    //     }
-    // }
+      _staker_list.modify( item, _self, [&]( auto& a ) {
+        a.last_updated = a.next_run;
+        a.next_run = a.last_updated ;
+        getReward(a.username, memo);
+
+      });
+    }
+   
   }
   auto itr = _staker_list.find(username.value);
 
   check(itr == _staker_list.end(), "Not staker");
   _staker_list.modify( itr, _self, [&]( auto& a ) {
-      a.collect_amount = "";
-      transfer( CONTRACT_ADDRESS, item.username, a.collect_amount, "Prizepayout bonus");   
+      transfer( contractowner, username, a.collect_amount, "Prizepayout bonus"); 
+      a.collect_amount.amount = 0;
   });
+  
 
 }
-EOSIO_DISPATCH(blockbunnies, (stake))
+EOSIO_DISPATCH(blockbunnies, (regstaker))

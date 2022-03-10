@@ -35,8 +35,10 @@ CONTRACT blockbunnies : public eosio::contract {
     vector<float> FarmingcharacterNFTs = {23.27, 0.66, 0.2, 7.19, 258.29, 78.27, 7.19};
     vector<uint8_t> FarmingtoolNFTs = {1, 1, 2, 4, 2, 1, 2};
     const uint32_t period = 4 * 60 * 60;
+    name contractowner;
 
-    ACTION regstaker(name username);
+
+    ACTION regstaker(name username, vector<asset> nftid_staked, vector<asset> toolnftid_staked, string place);
 
     ACTION banstaker (name username);
 
@@ -65,11 +67,11 @@ CONTRACT blockbunnies : public eosio::contract {
         name username; //name of the staking user
         asset fund_staked; // funds to be staked
         string place;
-        vector<id_type> nftid_staked;
-        vector<id_type> toolnftid_staked;
+        vector<asset> nftid_staked ;
+        vector<asset> toolnftid_staked;
         time_point_sec last_updated;
         time_point_sec next_run;
-        assert collect_amount;
+        asset collect_amount;
         bool isstaked; //if the users has already staked funds or not
         uint64_t primary_key() const {return username.value;}
     };
@@ -135,26 +137,10 @@ CONTRACT blockbunnies : public eosio::contract {
       indexed_by< "bysymbol"_n, const_mem_fun< token, uint64_t, &token::get_symbol> > >;
     token_index tokens;
 
-    TABLE timetable_data {
-        uint64_t key;
-        name from;
-        name account;
-        string action;
-        uint32_t period;
-        time_point_sec last_updated;
-        time_point_sec next_run;
-        bool active;
-
-        uint64_t primary_key() const { return key;}
-        uint64_t by_last_updated() const { return last_updated.utc_seconds; }
-    };
+   
     const symbol blockbunnies_symb;
-    typedef eosio::multi_index<"timetable"_n,
-                          timetable_data,
-                          eosio::indexed_by<"lastupdated"_n,
-                                            eosio::const_mem_fun<timetable_data,
-                                                                uint64_t,
-                                                                &timetable_data::by_last_updated>>> timetable;
+    const symbol blockcarrots_symb;
+
     void sub_balance(name owner, asset value);
     void add_balance(name owner, asset value, name ram_payer);
     void in_contract_transfer(name recipient, asset amount, string msg);
