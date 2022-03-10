@@ -1,33 +1,36 @@
 #include <staking.hpp>
 #include <cron.hpp>
 
-ACTION blockbunnies::regstaker (name username, vector<id_type> nftid_staked, vector<id_type> toolnftid_staked){
+ACTION blockbunnies::regstaker (name username, vector<id_type> nftid_staked, vector<id_type> toolnftid_staked, string place){
   require_auth(username);
   
   auto itr_banned = _banned_list.find(username.value);
   check(itr_banned == _banned_list.end(), "You where banned, please see your administrator");
 
   auto itr = _staker_list.find(username.value);
-  check(itr == _staker_list.end(), "You are already registered, you can stake your TRPM");
+  check(itr == _staker_list.end(), "You are already registered, you can stake your NFTs");
   time_point_sec current_time(now());
   // asset temp_asset(0, blockbunnies_symb);
+  stake(username, CONTRACT_ADDRESS, nftid_staked.length(), "startcommon");
+  stake(username, CONTRACT_ADDRESS, toolnftid_staked.length(), "starttool");
   itr = _staker_list.emplace(username, [&](auto& row){
     row.username = username;
-    for(uint8_t i in nftid_staked) {
+    for(id_type i in nftid_staked) {
       row.nftid_staked.push_back(i);  
     }
-    for(uint8_t i in toolnftid_staked) {
+    for(id_type i in toolnftid_staked) {
       row.toolnftid_staked.push_back(i);  
     }
     row.last_updated = current_time;
     row.next_run = row.last_updated + period;
+    row.place = place;
+    row.collect_amount = getReward(username, place);
     row.isstaked = true;
   });
-  stake(username, CONTRACT_ADDRESS, nftid_staked.length(), "startcommon");
-  stake(username, CONTRACT_ADDRESS, toolnftid_staked.length(), "starttool");
+
 
 }
-ACTION blockbunnies::getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo) {
+float blockbunnies::getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo) {
   requires(_self(), 0);
   check(NFTsID.getlength() > 0, "Not allowed getPower");
   check(memo, "Not allowed getPower");
@@ -215,6 +218,54 @@ ACTION blockbunnies::unstake (name username){
   _staker_list.erase(itr);
   require_recipient(username);
 }
+ACTION transfer( name 	from,
+                      name 	to,
+                      asset	quantity,
+                      string	memo ) {
+  check( from != to, "cannot transfer to self" );
+  require_auth( from );
+  check( is_account( to ), "to account does not exist");
+  check( memo.size() <= 256, "memo has more than 256 bytes" );
+  check( quantity.amount == 1, "cannot transfer quantity, not equal to 1" );
+  auto itr = _staker_list.find(from.value);
+  check(itr != _staker_list.end(), "You cannot stake, you are not yet registered");
+  auto symbl = tokens.get_index<"bysymbol"_n>();
+  auto it = symbl.lower_bound(quantity.symbol.code().raw());
+  bool found = false;
+  id_type id = 0;
+  for(; it!=symbl.end(); ++it){
+    if( it->value.symbol == quantity.symbol && it->owner == from) {
+      id = it->id;
+      found = true;
+      break;
+    }
+  }
+  if(memo == "startcommon") {
+    _staker_list.modify(itr, from, [&](auto& row){
+      row.fund_staked = quantity;
+      row.nftid_staked.push_back(id);
+      row.isstaked = true;
+    });
+  }
+  else if(memo == "starttool") {
+    _staker_list.modify(itr, from, [&](auto& row){
+      row.fund_staked = quantity;
+      row.toolnftid_staked.push_back(id);
+      row.isstaked = true;
+    });
+  }
+  // else if(memo == "increment"){
+  //   _staker_list.modify(itr, from, [&](auto& row){
+  //     row.fund_staked += quantity;
+  //     row.nftid_staked.push_back(id);
+  //   });
+  // }
+  check(found, "token is not found or is not owned by account");
+  require_recipient( from );
+  require_recipient( to );
+  // SEND_INLINE_ACTION( *this, transferNFT, {from, "active"_n}, {from, to, id, memo} );
+  transferNFT(from, to, id, memo);
+}
 void blockbunnies::sub_balance( name owner, asset value ) {
 
 	account_index from_acnts( _self, owner.value );
@@ -255,75 +306,77 @@ void blockbunnies::in_contract_transfer(name recipient, asset amount, string msg
         std::make_tuple(get_self(), recipient, amount, msg)
       }.send();
 }
-ACTION blockbunnies::run(uint32_t polling_interval, uint32_t rows_count) {
-    // Make sure the transaction was created by the current contract
-    require_auth(get_self());
-    
-    // Check whether execution should be stopped
-    if (stop_execution.get())
-        return;
+void transferNFT( name	from, name 	to, id_type	id, string	memo ) {
+        // Ensure authorized to send from account
+  check( from != to, "cannot transfer to self" );
+  require_auth( from );
 
-    // Record processing
-    scan_schedules(rows_count);
-    // Call run again in polling_interval seconds
-    create_transaction(_self, _self, "run", polling_interval, make_tuple(polling_interval, rows_count));
+  // Ensure 'to' account exists
+  check( is_account( to ), "to account does not exist");
+
+  // Check memo size and print
+  check( memo.size() <= 256, "memo has more than 256 bytes" );
+
+  // Ensure token ID exists
+  auto send_token = tokens.find( id );
+  check( send_token != tokens.end(), "token with specified ID does not exist" );
+
+  // Ensure owner owns token
+  check( send_token->owner == from, "sender does not own token with specified ID");
+
+  const auto& st = *send_token;
+
+  // Notify both recipients
+  require_recipient( from );
+  require_recipient( to );
+
+  // Transfer NFT from sender to receiver
+  tokens.modify( send_token, from, [&]( auto& token ) {
+    token.owner = to;
+  });
+
+  // Change balance of both accounts
+  sub_balance( from, st.value );
+  add_balance( to, st.value, from );
 }
-
-void blockbunnies::create_transaction(name payer, name account, const string &action, uint32_t delay,
-        const std::tuple<TParams...>& args) {
-    // Create a deferred transaction with the required delay
-    eosio::transaction t;
-    t.actions.emplace_back(
-            permission_level(_code, "active"_n),
-            account,
-            name(action),
-            args);
-
-    t.delay_sec = delay;
-    
-    // You will need a unique id for bug fixing
-    auto sender_id = unique_id.get();
-    t.send(sender_id, payer);
-    unique_id.set(sender_id + 1, _code);
-}
-ACTION blockbunnies::reward() {
-  time_point_sec current_time(now());
-
-// We check whether it’s time to execute the task 
-  if (current_time >= item.next_run) {
-      const name& account_from = item.from;
-
-      //  Make sure the user has enough funds on his balance account
-      if (get_balance(account_from) >= CALL_PRICE) {
-          reduce_balance(account_from, CALL_PRICE);
-          create_transaction(account_from, item.account, item.action, item.period, tuple<name>(account_from));
-      
-
-      // Refresh the runtime
-      cron_table.modify(item, _self, [&](auto& row) {
-          row.next_run = item.next_run + item.period;
-      });
+asset blockbunnies::getReward(name username, string memo) {
+  require_auth(get_self());
+  asset reward;
+  if(memo == "mining") {
+    reward  = "100.0000 BUNNY"; 
   }
+  else if(memo == "farming") {
+    reward  = "100.0000 CARROT";
+  }
+  auto itr = _staker_list.find(username.value);
+  _staker_list.modify( itr, _self, [&]( auto& a ) {
+      a.collect_amount.amount += reward.amount;
+  });
+  return reward;
+
 }
 ACTION blockbunnies::claim(name username, string memo) {
   require_auth(get_self());
-  auto itr = _staker_list.find(username.value);
-
-  check(itr == _staker_list.end(), "Not staker");
   time_point_sec current_time(now());
   for(auto& item : _staker_list) {
     if (item.next_run < current_time) {
         item.last_updated = item.next_run;
         item.next_run = last_updated + period;
-        if(memo == "mining") {
-          transfer( CONTRACT_ADDRESS, item.username, "100.0000 BUNNY", "Prizepayout bonus");   
-        }
-        else if(memo == "farming") {
-          transfer( CONTRACT_ADDRESS, item.username, "100.0000 CARROT", "Prizepayout bonus");   
-        }
-    }
+        getReward(item.username, memo);
+    //     if(memo == "mining") {
+    //     }
+    //     else if(memo == "farming") {
+    //       transfer( CONTRACT_ADDRESS, item.username, "100.0000 CARROT", "Prizepayout bonus");   
+    //     }
+    // }
   }
-  
-  
+  auto itr = _staker_list.find(username.value);
+
+  check(itr == _staker_list.end(), "Not staker");
+  _staker_list.modify( itr, _self, [&]( auto& a ) {
+      a.collect_amount = "";
+      transfer( CONTRACT_ADDRESS, item.username, a.collect_amount, "Prizepayout bonus");   
+  });
+
 }
 EOSIO_DISPATCH(blockbunnies, (stake))
