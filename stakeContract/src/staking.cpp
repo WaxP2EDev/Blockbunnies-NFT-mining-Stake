@@ -8,6 +8,7 @@ ACTION blockbunnies::regstaker (name username, vector<id_type> nftid_staked, vec
   check(itr_banned == _banned_list.end(), "You where banned, please see your administrator");
 
   auto itr = _staker_list.find(username.value);
+  claim(username, place);
   check(itr == _staker_list.end(), "You are already registered, you can stake your NFTs");
   time_point_sec current_time(now());
   // asset temp_asset(0, blockbunnies_symb);
@@ -27,8 +28,6 @@ ACTION blockbunnies::regstaker (name username, vector<id_type> nftid_staked, vec
     row.collect_amount = getReward(username, place);
     row.isstaked = true;
   });
-
-
 }
 float blockbunnies::getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo) {
   requires(_self(), 0);
