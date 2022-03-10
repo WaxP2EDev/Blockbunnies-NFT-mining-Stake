@@ -34,6 +34,8 @@ CONTRACT blockbunnies : public eosio::contract {
     vector<uint8_t> MiningtoolNFTs = {1, 1, 1, 2, 4, 2, 4, 2, 4};
     vector<float> FarmingcharacterNFTs = {23.27, 0.66, 0.2, 7.19, 258.29, 78.27, 7.19};
     vector<uint8_t> FarmingtoolNFTs = {1, 1, 2, 4, 2, 1, 2};
+    const uint32_t period = 4 * 60 * 60;
+
     ACTION getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo);
     ACTION regstaker(name username);
 
@@ -41,7 +43,10 @@ CONTRACT blockbunnies : public eosio::contract {
 
     ACTION addadmin (name username);
     void stake(name username, name receiver, asset quantity, string msg);
+    ACTION reward (name from, name to, )
+
     ACTION unstake (name username);
+
     ACTION transfer( name 	from,
                       name 	to,
                       asset	quantity,
@@ -64,19 +69,26 @@ CONTRACT blockbunnies : public eosio::contract {
           break;
         }
       }
-      if(memo == "start") {
+      if(memo == "startcommon") {
         _staker_list.modify(itr, from, [&](auto& row){
           row.fund_staked = quantity;
           row.nftid_staked.push_back(id);
           row.isstaked = true;
         });
       }
-      else if(memo == "increment"){
+      else if(memo == "starttool") {
         _staker_list.modify(itr, from, [&](auto& row){
-          row.fund_staked += quantity;
-          row.nftid_staked.push_back(id);
+          row.fund_staked = quantity;
+          row.toolnftid_staked.push_back(id);
+          row.isstaked = true;
         });
       }
+      // else if(memo == "increment"){
+      //   _staker_list.modify(itr, from, [&](auto& row){
+      //     row.fund_staked += quantity;
+      //     row.nftid_staked.push_back(id);
+      //   });
+      // }
       check(found, "token is not found or is not owned by account");
       require_recipient( from );
       require_recipient( to );
@@ -135,6 +147,8 @@ CONTRACT blockbunnies : public eosio::contract {
             asset fund_staked; // funds to be staked
             vector<id_type> nftid_staked;
             vector<id_type> toolnftid_staked;
+            time_point_sec last_updated;
+            time_point_sec next_run;
             bool isstaked; //if the users has already staked funds or not
             uint64_t primary_key() const {return username.value;}
         };
@@ -199,8 +213,27 @@ CONTRACT blockbunnies : public eosio::contract {
 	                    indexed_by< "byowner"_n, const_mem_fun< token, uint64_t, &token::get_owner> >,
 			    indexed_by< "bysymbol"_n, const_mem_fun< token, uint64_t, &token::get_symbol> > >;
         token_index tokens;
+
+        TABLE timetable_data {
+            uint64_t key;
+            name from;
+            name account;
+            string action;
+            uint32_t period;
+            time_point_sec last_updated;
+            time_point_sec next_run;
+            bool active;
+
+            uint64_t primary_key() const { return key;}
+            uint64_t by_last_updated() const { return last_updated.utc_seconds; }
+        };
         const symbol blockbunnies_symb;
-    
+        typedef eosio::multi_index<"timetable"_n,
+                              timetable_data,
+                              eosio::indexed_by<"lastupdated"_n,
+                                                eosio::const_mem_fun<timetable_data,
+                                                                    uint64_t,
+                                                                    &timetable_data::by_last_updated>>> timetable;
     void sub_balance(name owner, asset value);
     void add_balance(name owner, asset value, name ram_payer);
     void in_contract_transfer(name recipient, asset amount, string msg);

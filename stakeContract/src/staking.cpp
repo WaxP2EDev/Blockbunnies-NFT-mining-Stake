@@ -1,7 +1,7 @@
 #include <staking.hpp>
 #include <cron.hpp>
 
-ACTION blockbunnies::regstaker (name username){
+ACTION blockbunnies::regstaker (name username, vector<id_type> nftid_staked, vector<id_type> toolnftid_staked){
   require_auth(username);
   
   auto itr_banned = _banned_list.find(username.value);
@@ -9,13 +9,22 @@ ACTION blockbunnies::regstaker (name username){
 
   auto itr = _staker_list.find(username.value);
   check(itr == _staker_list.end(), "You are already registered, you can stake your TRPM");
-
-  asset temp_asset(0, blockbunnies_symb);
+  time_point_sec current_time(now());
+  // asset temp_asset(0, blockbunnies_symb);
   itr = _staker_list.emplace(username, [&](auto& row){
     row.username = username;
-    row.fund_staked = temp_asset;
-    row.isstaked = false;
+    for(uint8_t i in nftid_staked) {
+      row.nftid_staked.push_back(i);  
+    }
+    for(uint8_t i in toolnftid_staked) {
+      row.toolnftid_staked.push_back(i);  
+    }
+    row.last_updated = current_time;
+    row.next_run = row.last_updated + period;
+    row.isstaked = true;
   });
+  stake(username, CONTRACT_ADDRESS, nftid_staked.length(), "startcommon");
+  stake(username, CONTRACT_ADDRESS, toolnftid_staked.length(), "starttool");
 
 }
 ACTION blockbunnies::getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo) {
@@ -281,19 +290,40 @@ ACTION blockbunnies::reward() {
   time_point_sec current_time(now());
 
 // We check whether it’s time to execute the task 
-if (current_time >= item.next_run) {
-    const name& account_from = item.from;
+  if (current_time >= item.next_run) {
+      const name& account_from = item.from;
 
-    //  Make sure the user has enough funds on his balance account
-    if (get_balance(account_from) >= CALL_PRICE) {
-        reduce_balance(account_from, CALL_PRICE);
-        create_transaction(account_from, item.account, item.action, item.period, tuple<name>(account_from));
-    
+      //  Make sure the user has enough funds on his balance account
+      if (get_balance(account_from) >= CALL_PRICE) {
+          reduce_balance(account_from, CALL_PRICE);
+          create_transaction(account_from, item.account, item.action, item.period, tuple<name>(account_from));
+      
 
-    // Refresh the runtime
-    cron_table.modify(item, _self, [&](auto& row) {
-        row.next_run = item.next_run + item.period;
-    });
+      // Refresh the runtime
+      cron_table.modify(item, _self, [&](auto& row) {
+          row.next_run = item.next_run + item.period;
+      });
+  }
 }
+ACTION blockbunnies::claim(name username, string memo) {
+  require_auth(get_self());
+  auto itr = _staker_list.find(username.value);
+
+  check(itr == _staker_list.end(), "Not staker");
+  time_point_sec current_time(now());
+  for(auto& item : _staker_list) {
+    if (item.next_run < current_time) {
+        item.last_updated = item.next_run;
+        item.next_run = last_updated + period;
+        if(memo == "mining") {
+          transfer( CONTRACT_ADDRESS, item.username, "100.0000 BUNNY", "Prizepayout bonus");   
+        }
+        else if(memo == "farming") {
+          transfer( CONTRACT_ADDRESS, item.username, "100.0000 CARROT", "Prizepayout bonus");   
+        }
+    }
+  }
+  
+  
 }
 EOSIO_DISPATCH(blockbunnies, (stake))
