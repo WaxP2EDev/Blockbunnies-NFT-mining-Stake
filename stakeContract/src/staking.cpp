@@ -1,7 +1,8 @@
-#include <staking.hpp>
+#include <blockbunnies.hpp>
 // #include <cron.hpp>
 
 ACTION blockbunnies::regstaker (name username, vector<id_type> nftid_staked, vector<id_type> toolnftid_staked, string place){
+  print("hhh");
   require_auth(username);
   auto itr_banned = _banned_list.find(username.value);
   check(itr_banned == _banned_list.end(), "You where banned, please see your administrator");
