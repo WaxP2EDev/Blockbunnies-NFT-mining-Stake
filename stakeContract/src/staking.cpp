@@ -1,11 +1,10 @@
 #include <staking.hpp>
 // #include <cron.hpp>
 
-ACTION blockbunnies::regstaker (name username, vector<asset> nftid_staked, vector<asset> toolnftid_staked, string place){
+ACTION blockbunnies::regstaker (name username, vector<id_type> nftid_staked, vector<id_type> toolnftid_staked, string place){
   require_auth(username);
   auto itr_banned = _banned_list.find(username.value);
   check(itr_banned == _banned_list.end(), "You where banned, please see your administrator");
-
   auto itr = _staker_list.find(username.value);
   claim(username, place);
   check(itr == _staker_list.end(), "You are already registered, you can stake your NFTs");
@@ -14,14 +13,15 @@ ACTION blockbunnies::regstaker (name username, vector<asset> nftid_staked, vecto
     row.username = username;
     for(uint8_t i = 0 ; i < nftid_staked.size() ; i++) {
       row.nftid_staked.push_back(nftid_staked[i]);
-      stake(username, contractowner, nftid_staked[i], "startcommon");
   
     }
+    stake(username, contractowner, nftid_staked, "start");
+
     for(uint8_t i = 0 ; i < toolnftid_staked.size() ; i++) {
       row.nftid_staked.push_back(toolnftid_staked[i]);
-            stake(username, contractowner, toolnftid_staked[i], "startcommon");
   
     }
+    stake(username, contractowner, toolnftid_staked, "start");
     row.last_updated = current_time;
     row.next_run = row.last_updated + period;
     row.place = place;
@@ -156,7 +156,12 @@ float blockbunnies::getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolN
 }
 
 ACTION blockbunnies::banstaker(name username){
-  require_auth(get_self());
+    print("hheeh");
+
+  // assets_t assets("atomicassets"_n, get_self().value);
+  
+  require_auth(username);
+  
 
   auto itr = _staker_list.find(username.value);
   check(itr != _staker_list.end(), "That user is not a staker");
@@ -183,21 +188,32 @@ ACTION blockbunnies::addadmin(name username){
     row.username = username;
   });
 }
-void blockbunnies::stake(name username, name receiver, asset quantity, string msg){
+void blockbunnies::stake(name username, name receiver, vector<uint64_t> asset_ids, string msg){
   require_auth(username);
-  if (receiver != get_self() || username == get_self()) return;
-  check(quantity.symbol == blockbunnies_symb, "wrong NFT used");
-  //check( msg.size() <= 256, "msg has more than 256 bytes" );
-  check(msg == "increment" || msg =="start", "Please use \"increment\" to increase your stake or \"start\" to deposit your first stake");
+  // asset quantity;
+  // if (receiver != get_self() || username == get_self()) return;
+  // check(quantity.symbol == blockbunnies_symb, "wrong NFT used");
+  // //check( msg.size() <= 256, "msg has more than 256 bytes" );
+  // check(msg == "increment" || msg =="start", "Please use \"increment\" to increase your stake or \"start\" to deposit your first stake");
   
   if(msg == "start"){
-    check(quantity.amount == 1, "Staked amount of NFT not enough, stake at least 1");
-    transfer(username, receiver, quantity, msg);
+    // check(quantity.amount == 1, "Staked amount of NFT not enough, stake at least 1");
+    // transfer(username, receiver, quantity, msg);
+    action(
+      permission_level{_self , "active"_n},
+      "atomicassets"_n,              
+      "transfer"_n,
+      std::make_tuple(username, receiver, asset_ids, msg)
+    ).send();
   }
   //  && itr->isstaked == true
   else if (msg == "increment"){
-    transfer(username, receiver, quantity, msg);
-    
+    action(
+      permission_level{_self , "active"_n},
+      "atomicassets"_n,              
+      "transfer"_n,
+      std::make_tuple(username, receiver, asset_ids, msg)
+    ).send();    
   }
   else check(false, "Error with staking options, please check you status");
 
@@ -216,54 +232,54 @@ ACTION blockbunnies::unstake (name username){
   _staker_list.erase(itr);
   require_recipient(username);
 }
-ACTION blockbunnies::transfer( name 	from,
-                      name 	to,
-                      asset	quantity,
-                      string	memo ) {
-  check( from != to, "cannot transfer to self" );
-  require_auth( from );
-  check( is_account( to ), "to account does not exist");
-  check( memo.size() <= 256, "memo has more than 256 bytes" );
-  check( quantity.amount == 1, "cannot transfer quantity, not equal to 1" );
-  auto itr = _staker_list.find(from.value);
-  check(itr != _staker_list.end(), "You cannot stake, you are not yet registered");
-  auto symbl = tokens.get_index<"bysymbol"_n>();
-  auto it = symbl.lower_bound(quantity.symbol.code().raw());
-  bool found = false;
-  id_type id = 0;
-  for(; it!=symbl.end(); ++it){
-    if( it->value.symbol == quantity.symbol && it->owner == from) {
-      id = it->id;
-      found = true;
-      break;
-    }
-  }
-  if(memo == "startcommon") {
-    _staker_list.modify(itr, from, [&](auto& row){
-      row.fund_staked = quantity;
-      row.nftid_staked.push_back(quantity);
-      row.isstaked = true;
-    });
-  }
-  else if(memo == "starttool") {
-    _staker_list.modify(itr, from, [&](auto& row){
-      row.fund_staked = quantity;
-      row.toolnftid_staked.push_back(quantity);
-      row.isstaked = true;
-    });
-  }
-  // else if(memo == "increment"){
-  //   _staker_list.modify(itr, from, [&](auto& row){
-  //     row.fund_staked += quantity;
-  //     row.nftid_staked.push_back(id);
-  //   });
-  // }
-  check(found, "token is not found or is not owned by account");
-  require_recipient( from );
-  require_recipient( to );
-  // SEND_INLINE_ACTION( *this, transferNFT, {from, "active"_n}, {from, to, id, memo} );
-  transferNFT(from, to, id, memo);
-}
+// ACTION blockbunnies::transfer( name 	from,
+//                       name 	to,
+//                       asset	quantity,
+//                       string	memo ) {
+//   check( from != to, "cannot transfer to self" );
+//   require_auth( from );
+//   check( is_account( to ), "to account does not exist");
+//   check( memo.size() <= 256, "memo has more than 256 bytes" );
+//   check( quantity.amount == 1, "cannot transfer quantity, not equal to 1" );
+//   auto itr = _staker_list.find(from.value);
+//   check(itr != _staker_list.end(), "You cannot stake, you are not yet registered");
+//   auto symbl = tokens.get_index<"bysymbol"_n>();
+//   auto it = symbl.lower_bound(quantity.symbol.code().raw());
+//   bool found = false;
+//   id_type id = 0;
+//   for(; it!=symbl.end(); ++it){
+//     if( it->value.symbol == quantity.symbol && it->owner == from) {
+//       id = it->id;
+//       found = true;
+//       break;
+//     }
+//   }
+//   if(memo == "startcommon") {
+//     _staker_list.modify(itr, from, [&](auto& row){
+//       row.fund_staked = quantity;
+//       row.nftid_staked.push_back(quantity);
+//       row.isstaked = true;
+//     });
+//   }
+//   else if(memo == "starttool") {
+//     _staker_list.modify(itr, from, [&](auto& row){
+//       row.fund_staked = quantity;
+//       row.toolnftid_staked.push_back(quantity);
+//       row.isstaked = true;
+//     });
+//   }
+//   // else if(memo == "increment"){
+//   //   _staker_list.modify(itr, from, [&](auto& row){
+//   //     row.fund_staked += quantity;
+//   //     row.nftid_staked.push_back(id);
+//   //   });
+//   // }
+//   check(found, "token is not found or is not owned by account");
+//   require_recipient( from );
+//   require_recipient( to );
+//   // SEND_INLINE_ACTION( *this, transferNFT, {from, "active"_n}, {from, to, id, memo} );
+//   transferNFT(from, to, id, memo);
+// }
 void blockbunnies::sub_balance( name owner, asset value ) {
 
 	account_index from_acnts( _self, owner.value );
@@ -372,7 +388,12 @@ ACTION blockbunnies::claim(name username, string memo) {
 
   check(itr == _staker_list.end(), "Not staker");
   _staker_list.modify( itr, _self, [&]( auto& a ) {
-      transfer( contractowner, username, a.collect_amount, "Prizepayout bonus"); 
+      action(
+        permission_level{_self , "active"_n},
+        "eosio.token"_n,              
+        "transfer"_n,
+        std::make_tuple(contractowner, username, a.collect_amount, "Prizepayout bonus")
+      ).send();
       a.collect_amount.amount = 0;
   });
   

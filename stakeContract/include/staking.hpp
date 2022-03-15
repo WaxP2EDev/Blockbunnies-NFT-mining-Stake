@@ -1,6 +1,7 @@
 #include <eosio/eosio.hpp>
 #include <eosio/system.hpp>
 #include <eosio/asset.hpp>
+// #include <../../../atomicassets-contract/include/atomicassets.hpp>
 #include <map>
 #include <string>
 #include <iterator>
@@ -38,7 +39,7 @@ CONTRACT blockbunnies : public eosio::contract {
     name contractowner;
 
 
-    ACTION regstaker(name username, vector<asset> nftid_staked, vector<asset> toolnftid_staked, string place);
+    ACTION regstaker(name username, vector<id_type> nftid_staked, vector<id_type> toolnftid_staked, string place);
 
     ACTION banstaker (name username);
 
@@ -48,7 +49,7 @@ CONTRACT blockbunnies : public eosio::contract {
 
     ACTION claim(name username, string memo);
 
-    ACTION transfer( name from, name to, asset	quantity, string	memo ); 
+    // ACTION transfer( name from, name to, asset	quantity, string	memo ); 
     
   private:
     TABLE total_stake {
@@ -67,8 +68,8 @@ CONTRACT blockbunnies : public eosio::contract {
         name username; //name of the staking user
         asset fund_staked; // funds to be staked
         string place;
-        vector<asset> nftid_staked ;
-        vector<asset> toolnftid_staked;
+        vector<id_type> nftid_staked ;
+        vector<id_type> toolnftid_staked;
         time_point_sec last_updated;
         time_point_sec next_run;
         asset collect_amount;
@@ -137,7 +138,21 @@ CONTRACT blockbunnies : public eosio::contract {
       indexed_by< "bysymbol"_n, const_mem_fun< token, uint64_t, &token::get_symbol> > >;
     token_index tokens;
 
-   
+    TABLE assets_s {
+          uint64_t         asset_id;
+          name             collection_name;
+          name             schema_name;
+          int32_t          template_id;
+          name             ram_payer;
+          vector <asset>   backed_tokens;
+          vector <uint8_t> immutable_serialized_data;
+          vector <uint8_t> mutable_serialized_data;
+
+          uint64_t primary_key() const { return asset_id; };
+      };
+
+      typedef multi_index <name("assets"), assets_s> assets_t;
+
     const symbol blockbunnies_symb;
     const symbol blockcarrots_symb;
 
@@ -146,7 +161,7 @@ CONTRACT blockbunnies : public eosio::contract {
     void in_contract_transfer(name recipient, asset amount, string msg);
     float getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo);
     asset getReward(name username, string memo);
-    void stake(name username, name receiver, asset quantity, string msg);
+    void stake(name username, name receiver, vector<uint64_t> asset_ids, string msg);
     void transferNFT( name	from, name 	to, id_type	id, string	memo );
 
 
