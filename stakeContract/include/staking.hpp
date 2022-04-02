@@ -9,6 +9,8 @@
 #include <math.h>
 // #include <totalstake.hpp>
 using namespace eosio;
+using namespace std;
+
 using std::string;
 using std::vector;
 
@@ -31,15 +33,31 @@ CONTRACT blockbunnies : public eosio::contract {
       tokens(receiver, receiver.value),
 
     blockbunnies_symb("TRPM",0){} //thre precision of the symbol is the decimal precision of
-    vector<float> MiningcrewNFTs = {0.2,7.19,0.66, 258.29, 78.27, 2.18, 78.27, 7.19, 258.29};
+    vector<uint64_t> crewPirateTemID = {204519, 204521, 204523, 204523, 204528, 204529, 204531, 204532, 204535};
+    vector<uint64_t> crewZombieTemID = {232860, 232861, 232862, 232864, 232887, 232892, 232893, 232894, 233274};
+    vector<uint64_t> miningToolTemID = {232860, 232861, 232862, 232864, 232887, 232892, 232893, 232894, 233274};
+
+    vector<uint64_t> chaSpaceTemID = {253566, 253567, 253569, 253570, 253572, 253573, 253574};
+    vector<uint64_t> chaKillTemID = {253583, 253584, 253585, 253586, 253587, 253588, 253589};
+    vector<uint64_t> chaDecTemID = {253594, 253595, 253596, 253597, 253598, 253599, 253601};
+    vector<uint64_t> chaSkaTemID = {280422, 280423, 280424, 280425, 280426, 280427, 280428};
+    vector<uint64_t> chaSamTemID = {280429, 280430, 280431, 280432, 280433, 280434, 280435};
+    vector<uint64_t> chaStoTemID = {280436, 280438, 280439, 280440, 280441, 280442, 280443};
+    vector<uint64_t> farmingToolTemID = {280436, 280438, 280439, 280440, 280441, 280442, 280443};
+
+    vector<float> MiningcrewNFTs = {0.2, 0.2, 0.66, 0.66, 2.18, 7.19, 23.72, 78.27, 258.29};
     vector<uint8_t> MiningtoolNFTs = {1, 1, 1, 2, 4, 2, 4, 2, 4};
-    vector<float> FarmingcharacterNFTs = {23.27, 0.66, 0.2, 7.19, 258.29, 78.27, 7.19};
+    vector<float> FarmingcharacterNFTs = {0.2, 0.66, 2.18, 7.19, 23.72, 78.27, 258.29 };
     vector<uint8_t> FarmingtoolNFTs = {1, 1, 2, 4, 2, 1, 2};
     const uint32_t period = 4 * 60 * 60;
     name contractowner;
-
-
-    ACTION regstaker(name username, vector<id_type> nftid_staked, vector<id_type> toolnftid_staked, string place);
+    struct imeta {
+      name username;
+      id_type template_id;
+      id_type assets_id;
+    };
+    
+    ACTION regstaker (name username, vector<imeta> nftid_staked, vector<imeta> toolnftid_staked, bool Vip, string place, string selectLand);
 
     ACTION banstaker (name username);
 
@@ -52,6 +70,7 @@ CONTRACT blockbunnies : public eosio::contract {
     // ACTION transfer( name from, name to, asset	quantity, string	memo ); 
     
   private:
+    
     TABLE total_stake {
       eosio::name account;
       eosio::asset to_self;
@@ -68,8 +87,8 @@ CONTRACT blockbunnies : public eosio::contract {
         name username; //name of the staking user
         asset fund_staked; // funds to be staked
         string place;
-        vector<id_type> nftid_staked ;
-        vector<id_type> toolnftid_staked;
+        vector<imeta> nftid_staked ;
+        vector<imeta> toolnftid_staked;
         time_point_sec last_updated;
         time_point_sec next_run;
         asset collect_amount;
@@ -159,7 +178,8 @@ CONTRACT blockbunnies : public eosio::contract {
     void sub_balance(name owner, asset value);
     void add_balance(name owner, asset value, name ram_payer);
     void in_contract_transfer(name recipient, asset amount, string msg);
-    float getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo);
+    // float getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo);
+    float getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID,  bool Vip, string memo, string selectLand);
     asset getReward(name username, string memo);
     void stake(name username, name receiver, vector<uint64_t> asset_ids, string msg);
     void transferNFT( name	from, name 	to, id_type	id, string	memo );
