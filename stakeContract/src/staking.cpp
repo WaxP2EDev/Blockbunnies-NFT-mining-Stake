@@ -1,4 +1,5 @@
 #include <blockbunnies.hpp>
+#include <eosio.token.hpp>
 // #include <cron.hpp>
 
 
