@@ -1,4 +1,4 @@
-#include <blockbunnies.hpp>
+#include <staking.hpp>
 #include <eosio.token.hpp>
 // #include <cron.hpp>
 
@@ -12,7 +12,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
     if(place == "mining") {
       if(selectLand == "pirate") {
         for(uint8_t j = 0; j < crewPirateTemID.size() + 1; j++) {
-          check(j ==  crewPirateTemID.size(), "This NFT not allowed in this game")
+          check(j ==  crewPirateTemID.size(), "This NFT not allowed in this game");
           if(crewPirateTemID[j] == nftid_staked[i].template_id) {
             break;
           } 
@@ -21,7 +21,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
       }
       else if(selectLand == "zombie") {
         for(uint8_t j = 0; j < crewZombieTemID.size() + 1; j++) {
-          check(j ==  crewZombieTemID.size(), "This NFT not allowed in this game")
+          check(j ==  crewZombieTemID.size(), "This NFT not allowed in this game");
           if(crewZombieTemID[j] == nftid_staked[i].template_id) {
             break;
           } 
@@ -35,7 +35,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
     else if(place == "farming") {
         if(selectLand == "space") {
           for(uint8_t j = 0; j < chaSpaceTemID.size() + 1; j++) {
-            check(j ==  chaSpaceTemID.size(), "This NFT not allowed in this game")
+            check(j ==  chaSpaceTemID.size(), "This NFT not allowed in this game");
             if(chaSpaceTemID[j] == nftid_staked[i].template_id) {
               break;
             } 
@@ -44,7 +44,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
         }
         else if(selectLand == "kill") {
           for(uint8_t j = 0; j < chaKillTemID.size() + 1; j++) {
-            check(j ==  chaKillTemID.size(), "This NFT not allowed in this game")
+            check(j ==  chaKillTemID.size(), "This NFT not allowed in this game");
             if(chaKillTemID[j] == nftid_staked[i].template_id) {
               break;
             } 
@@ -53,7 +53,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
         }
         else if(selectLand == "dec") {
           for(uint8_t j = 0; j < chaDecTemID.size() + 1; j++) {
-            check(j ==  chaDecTemID.size(), "This NFT not allowed in this game")
+            check(j ==  chaDecTemID.size(), "This NFT not allowed in this game");
             if(chaDecTemID[j] == nftid_staked[i].template_id) {
               break;
             } 
@@ -62,7 +62,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
         }
         else if(selectLand == "ska") {
           for(uint8_t j = 0; j < chaSkaTemID.size() + 1; j++) {
-            check(j ==  chaSkaTemID.size(), "This NFT not allowed in this game")
+            check(j ==  chaSkaTemID.size(), "This NFT not allowed in this game");
             if(chaSkaTemID[j] == nftid_staked[i].template_id) {
               break;
             } 
@@ -71,7 +71,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
         }
         else if(selectLand == "sam") {
           for(uint8_t j = 0; j < chaSamTemID.size() + 1; j++) {
-            check(j ==  chaSamTemID.size(), "This NFT not allowed in this game")
+            check(j ==  chaSamTemID.size(), "This NFT not allowed in this game");
             if(chaSamTemID[j] == nftid_staked[i].template_id) {
               break;
             } 
@@ -80,7 +80,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
         }
         else if(selectLand == "sto") {
           for(uint8_t j = 0; j < chaStoTemID.size() + 1; j++) {
-            check(j ==  chaStoTemID.size(), "This NFT not allowed in this game")
+            check(j ==  chaStoTemID.size(), "This NFT not allowed in this game");
             if(chaStoTemID[j] == nftid_staked[i].template_id) {
               break;
             } 
@@ -92,10 +92,10 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
         }
       } 
   }
-  for(uint8_t i = 0 ; i < ToolNFTsID.size() ; i++) {
+  for(uint8_t i = 0 ; i < toolnftid_staked.size() ; i++) {
     if(place == "mining") {
       for(uint8_t j = 0; j < miningToolTemID.size() + 1; j++) {
-        check(j ==  miningToolTemID.size(), "This NFT not allowed in this game")
+        check(j ==  miningToolTemID.size(), "This NFT not allowed in this game");
         if(miningToolTemID[j] == toolnftid_staked[i].template_id) {
           break;
         } 
@@ -103,7 +103,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
     }
     else if(place == "farming") {
       for(uint8_t j = 0; j < farmingToolTemID.size() + 1; j++) {
-        check(j ==  farmingToolTemID.size(), "This NFT not allowed in this game")
+        check(j ==  farmingToolTemID.size(), "This NFT not allowed in this game");
         if(farmingToolTemID[j] == toolnftid_staked[i].template_id) {
           break;
         } 
@@ -119,7 +119,7 @@ ACTION blockbunnies::regstaker (name username, vector<imeta> nftid_staked, vecto
       row.username = username;
       vector<id_type> assetIDNFT1 = {};
       vector<id_type> assetIDNFT2 = {};
-      if(place == 'mining') {
+      if(place == "mining") {
         row.collect_amount.symbol = blockbunnies_symb;
       }
       else {
@@ -267,16 +267,16 @@ void blockbunnies::stake(name username, name receiver, vector<id_type> assets_id
 }
 
 
-ACTION blockbunnies::unstake (name username,assets_id){
+ACTION blockbunnies::unstake (name username, id_type assets_id){
   require_auth(username);
   auto itr = _staker_list.find(username.value);
   check(itr != _staker_list.end(), "Your are not a staker, please register first");
   vector<id_type> total_NFTs = {};
   for(uint8_t i = 0; i < itr->nftid_staked.size() ; i++) {
-    total_NFTs.push_back(itr->nftid_staked[i]);
+    total_NFTs.push_back(itr->nftid_staked[i].assets_id);
   }
   for(uint8_t i = 0; i < itr->toolnftid_staked.size() ; i++) {
-    total_NFTs.push_back(itr->toolnftid_staked[i]);
+    total_NFTs.push_back(itr->toolnftid_staked[i].assets_id);
   }
   in_contract_transfer(username, total_NFTs, string("Your NFT_staked have been unstaked"));    
 
@@ -349,17 +349,17 @@ void blockbunnies::sub_balance( name owner, asset value ) {
 
 void blockbunnies::add_balance( name owner, asset value, name ram_payer ) {
 
-	account_index to_accounts( _self, owner.value  _self, owner.value );
-        auto to = to_accounts.find( value.symbol.code().raw() );
-        if( to == to_accounts.end() ) {
-            to_accounts.emplace( ram_payer, [&]( auto& a ){
-                a.balance = value;
-            });
-        } else {
-            to_accounts.modify( to, _self, [&]( auto& a ) {
-                a.balance += value;
-            });
-        }
+	account_index to_accounts( _self, owner.value );
+  auto to = to_accounts.find( value.symbol.code().raw() );
+  if( to == to_accounts.end() ) {
+      to_accounts.emplace( ram_payer, [&]( auto& a ){
+          a.balance = value;
+      });
+  } else {
+      to_accounts.modify( to, _self, [&]( auto& a ) {
+          a.balance += value;
+      });
+  }
 }
 void blockbunnies::in_contract_transfer(name recipient, vector<id_type> assets_id, string msg){
   action(
@@ -402,23 +402,42 @@ void blockbunnies::in_contract_transfer(name recipient, vector<id_type> assets_i
 //   sub_balance( from, st.value );
 //   add_balance( to, st.value, from );
 // }
-asset blockbunnies::getReward(name username, string memo, string selectLand) {
+eosio::asset blockbunnies::getReward(name username, string selectLand) {
   require_auth(get_self());
-  asset reward;
+  eosio::asset reward;
   auto itr = _staker_list.find(username.value);
   check(itr == _staker_list.end(), "You don't register in stakerlist");
-  if(memo == "mining") {
-    reward.amount = getPower(itr->nftid_staked, itr->toolnftid_staked, false, memo, selectLand);
+  vector<id_type> nftIDs = {};
+  vector<id_type> nftIDs1 = {};
+
+  if(itr->place == "mining") {
+    for(uint8_t i = 0 ; i < itr->nftid_staked.size() ; i++) {
+        nftIDs.push_back(itr->nftid_staked[i].assets_id);
+    }
+    for(uint8_t i = 0 ; i < itr->toolnftid_staked.size() ; i++) {
+        nftIDs1.push_back(itr->toolnftid_staked[i].assets_id);
+    }
+    reward.amount = getPower(nftIDs, nftIDs1, false, itr->place, selectLand);
     reward.symbol =  blockbunnies_symb;
   }
-  else if(memo == "farming") {
-    reward.amount = getPower(itr->nftid_staked, itr->toolnftid_staked, false, memo, selectLand);
-    reward.symbol =  blockcarrots_symb;  }
+  else if(itr->place == "farming") {
+    for(uint8_t i = 0 ; i < itr->nftid_staked.size() ; i++) {
+        nftIDs.push_back(itr->nftid_staked[i].assets_id);
+    }
+    for(uint8_t i = 0 ; i < itr->toolnftid_staked.size() ; i++) {
+        nftIDs1.push_back(itr->toolnftid_staked[i].assets_id);
+    }
+    reward.amount = getPower(nftIDs, nftIDs1, false, itr->place, selectLand);
+    reward.symbol =  blockcarrots_symb;  
+  }
+  else {
+    check(false, "plz choose mining or farming");
+  }
   _staker_list.modify( itr, _self, [&]( auto& a ) {
 
     a.collect_amount.amount += reward.amount;
     a.collect_amount.symbol = reward.symbol;
-  }
+  });
   return reward;
 
 }
@@ -431,14 +450,14 @@ ACTION blockbunnies::claim(name username, string memo) {
       _staker_list.modify( item, _self, [&]( auto& a ) {
         a.last_updated = a.next_run;
         a.next_run = a.last_updated + period;
-        claim_amount =  getReward(a.username, memo);
+        claim_amount =  getReward(a.username, a.place);
         action(
           permission_level{_self , "active"_n},
           "eosio.token"_n,              
           "transfer"_n,
           std::make_tuple(get_self(), username, claim_amount, "Sent reward to staker")
         ).send();
-        a.collect_amount.amount = a.collect_amount - claim_amount.amount;
+        a.collect_amount.amount = a.collect_amount.amount - claim_amount.amount;
       });
     }
    

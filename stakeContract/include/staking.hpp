@@ -53,6 +53,7 @@ CONTRACT blockbunnies : public eosio::contract {
     name contractowner;
     struct imeta {
       name username;
+      string collection_name;
       id_type template_id;
       id_type assets_id;
     };
@@ -63,7 +64,7 @@ CONTRACT blockbunnies : public eosio::contract {
 
     ACTION addadmin (name username);
     
-    ACTION unstake (name username);
+    ACTION unstake (name username, id_type assets_id);
 
     ACTION claim(name username, string memo);
 
@@ -177,10 +178,10 @@ CONTRACT blockbunnies : public eosio::contract {
 
     void sub_balance(name owner, asset value);
     void add_balance(name owner, asset value, name ram_payer);
-    void in_contract_transfer(name recipient, asset amount, string msg);
+    void in_contract_transfer(name recipient, vector<id_type> assets_id, string msg);
     // float getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID, bool Vip, string memo);
     float getPower(vector<id_type> CommonNFTsID, vector<id_type> ToolNFTsID,  bool Vip, string memo, string selectLand);
-    asset getReward(name username, string memo);
+    eosio::asset getReward(name username, string selectLand);
     void stake(name username, name receiver, vector<uint64_t> asset_ids, string msg);
     void transferNFT( name	from, name 	to, id_type	id, string	memo );
 
